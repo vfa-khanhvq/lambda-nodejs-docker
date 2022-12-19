@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  Stage:
+    Type: String
+    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
+    Default: "Dev"
+  LambdaMemory:
+    Type: String
+    Description: Lambda Memory
+    Default: "128"
+  CodeDeployRole:
+    Type: String
+    Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
+    Default: "arn:aws:iam::044255305011:role/Creka_DEV_Tasks_Deploy"
+  HostCreka:
+    Type: String
+    Description: Api host creka dev
+    Default: "https://api-creditrelay-develop.connect-sec.co.jp/graphql"
+
+
+Resources:
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: demo-pipeline-poc-common-layer
+      Description: common layer for demo pipeline poc
+      ContentUri: common-layers/
+      CompatibleRuntimes:
+        - nodejs16.x
+      LicenseInfo: "MIT"
+      RetentionPolicy: Retain
+
+  GetAccessToken:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/accesstoken
+      FunctionName: !Sub "lambda-function-api-pipeline-accesstoken-${Stage}"
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      Events:
+        Login:
+          Type: Api
+          Properties:
+            Path: /api/accesstoken
+            Method: post
+
+  CheckKanaName:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/kananame
+      FunctionName: !Sub "lambda-function-api-pipeline-kana-name-${Stage}"
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      Events:
+        Login:
+          Type: Api
+          Properties:
+            Path: /api/kana-name
+            Method: post
+
+  LamdaScheduleCron:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/createOrders
+      FunctionName: !Sub "run-create-orders-batch-creka-${Stage}"
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      Events:
+        BatchSyncDataToCDP:
+          Type: Schedule
+          Properties:
+            Name: !Sub "run-create-orders-batch"
+            Description: "run-create-orders-batch"
+            Schedule: "cron(1 0 1 * ? *)"
+            Enabled: true
+
+  # Append New Api
+  LambdaExecutionRole:
+    Description: Creating service role in IAM for AWS Lambda
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "Lambda-Execution-${Stage}"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                  - lambda.amazonaws.com
+                  - events.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - !Sub "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+
+Globals:
+  Function:
+    Handler: index.handler
+    Runtime: nodejs16.x
+    MemorySize: !Ref LambdaMemory
+    Timeout: 60
+    Layers:
+      - !Ref CommonLayer
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled: true
+      Type: Canary10Percent5Minutes
+      Role: !Ref CodeDeployRole
+    Environment:
+      Variables:
+        HOST_CREKA: !Ref HostCreka
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"

@@ -1,0 +1,37 @@
+'use strict';
+
+const LAYER_PATH = process.env.LAYER_PATH;
+const requestUtil = require(LAYER_PATH + '/common/utils/request_util');
+const responseUtil = require(LAYER_PATH + '/common/utils/response_util');
+const logUtil = require(LAYER_PATH + '/common/utils/log_util');
+const validationUtil = require(LAYER_PATH + '/common/utils/validation_util');
+
+exports.handler = async (event, context, callback) => {
+    context.callbackWaitsForEmptyEventLoop = false;
+    let responseInfo = null;
+    let identity = null;
+
+    try {
+        const query = event.queryStringParameters;
+        await validationUtil.validate(query, {
+            $$strict: true
+        });
+        const returnResult = {
+            message: 'Api get'
+        }
+        responseInfo = responseUtil.createResponse(
+            responseUtil.HTTP_STATUS_CODE_200,
+            returnResult
+        );
+    } catch (error) {
+        responseInfo = responseUtil.convertResponseErrorInfo(error);
+    } finally {
+        logUtil.writeLogCloudWatch(
+            requestUtil.getApiName(event),
+            identity,
+            event,
+            responseInfo
+        );
+        callback(null, responseInfo);
+    }
+};

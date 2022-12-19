@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+Parameters:
+  Stage:
+    Type: String
+    Description: The name for a project pipeline stage, such as Staging or Prod, for
+      which resources are provisioned and deployed.
+    Default: Dev
+  LambdaMemory:
+    Type: String
+    Description: Lambda Memory
+    Default: '128'
+  BucketAssest:
+    Type: String
+    Description: BucketAssest
+    Default: demo-s3-trigger
+  CodeDeployRole:
+    Type: String
+    Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda
+      functions
+    Default: arn:aws:iam::773930259638:role/service-role/AWSCodePipelineServiceRole-us-east-1-DemoPipelineLambda
+Resources:
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: demo-pipeline-poc-common-layer
+      Description: common layer for demo pipeline poc
+      ContentUri: s3://demo-pipeline-codebuild-tokyo/abd5546f69ac62b5e69282c281d4935a
+      CompatibleRuntimes:
+      - nodejs16.x
+      LicenseInfo: MIT
+      RetentionPolicy: Retain
+  Login:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://demo-pipeline-codebuild-tokyo/938194e3f1adbf70a48d1491b07d7fef
+      FunctionName:
+        Fn::Sub: demo-pipeline-${Stage}
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        Login:
+          Type: Api
+          Properties:
+            Path: /api/demo
+            Method: post
+  LambdaExecutionRole:
+    Description: Creating service role in IAM for AWS Lambda
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: Lambda-Execution-${Stage}
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+      - Fn::Sub: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - Fn::Sub: arn:aws:iam::aws:policy/AmazonS3FullAccess
+Globals:
+  Function:
+    Handler: index.handler
+    Runtime: nodejs16.x
+    MemorySize:
+      Ref: LambdaMemory
+    Timeout: 60
+    Layers:
+    - Ref: CommonLayer
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled: true
+      Type: Canary10Percent5Minutes
+      Role:
+        Ref: CodeDeployRole
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"

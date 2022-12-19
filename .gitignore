@@ -1,0 +1,15 @@
+node_modules
+.nyc_output
+coverage
+common-layers/nodejs
+
+# vscode
+*.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.zip
+
+.idea/
