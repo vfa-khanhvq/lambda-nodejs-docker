@@ -52,7 +52,9 @@
               "Action": [
                 "logs:*",
                 "s3:*",
-                "cloudfront:*"
+                "cloudfront:*",
+                "cloudformation:*",
+                "iam:*"
               ],
               "Effect": "Allow",
               "Resource": "*"
@@ -95,7 +97,7 @@
             {
               "Name": "CLOUD_FORMATION_ROLE",
               "Value": {
-                "Ref": "CloudformationRole"
+                "Fn::GetAtt": ["CloudformationRole", "Arn"]
               }
             }
           ]
@@ -267,7 +269,9 @@
                 "logs:*",
                 "codedeploy:*",
                 "codebuild:*",
-                "cloudformation:*"
+                "cloudformation:*",
+                "iam:*",
+                "apigateway:*"
               ],
               "Effect": "Allow",
               "Resource": "*"
