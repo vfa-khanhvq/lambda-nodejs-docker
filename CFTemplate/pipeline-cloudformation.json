@@ -93,11 +93,16 @@
           "Image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
           "ComputeType": "BUILD_GENERAL1_SMALL",
           "PrivilegedMode": true,
-          "EnvironmentVariables": [
-            {
+          "EnvironmentVariables": [{
               "Name": "BUCKET_NAME",
               "Value": {
-                "Fn::GetAtt": ["CodePipelineArtifactStoreBucket", "BucketName"]
+                "Ref": "CodePipelineArtifactStoreBucket"
+              }
+            },
+            {
+              "Name": "DEPLOY_ROLE",
+              "Value": {
+                "Fn::GetAtt": ["CodeDeployRole", "Arn"]
               }
             }
           ]
@@ -241,6 +246,23 @@
         "BucketName": {
           "Fn::Sub": "pipeline-artifac-lambda-store-bucket-${Environment}"
         }
+      }
+    },
+    "CodeDeployRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [{
+            "Action": ["sts:AssumeRole"],
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["codedeploy.amazonaws.com"]
+            }
+          }],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda"]
       }
     }
   }
