@@ -54,7 +54,18 @@
                 "s3:*",
                 "cloudfront:*",
                 "cloudformation:*",
-                "iam:*"
+                "iam:*",
+                "execute-api:*",
+                "apigateway:*",
+                "events:*",
+                "schemas:*",
+                "scheduler:*",
+                "pipes:*",
+                "cloudformation:*",
+                "ec2:*",
+                "codebuild:*",
+                "codedeploy:*",
+                "lambda:*"
               ],
               "Effect": "Allow",
               "Resource": "*"
