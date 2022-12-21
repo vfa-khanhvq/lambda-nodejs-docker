@@ -95,9 +95,9 @@
           "PrivilegedMode": true,
           "EnvironmentVariables": [
             {
-              "Name": "CLOUD_FORMATION_ROLE",
+              "Name": "BUCKET_NAME",
               "Value": {
-                "Fn::GetAtt": ["CloudformationRole", "Arn"]
+                "Fn::GetAtt": ["CodePipelineArtifactStoreBucket", "BucketName"]
               }
             }
           ]
@@ -241,43 +241,6 @@
         "BucketName": {
           "Fn::Sub": "pipeline-artifac-lambda-store-bucket-${Environment}"
         }
-      }
-    },
-    "CloudformationRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [{
-            "Action": ["sts:AssumeRole"],
-            "Effect": "Allow",
-            "Principal": {
-              "Service": ["cloudformation.amazonaws.com"]
-            }
-          }],
-          "Version": "2012-10-17"
-        },
-        "Path": "/",
-        "Policies": [{
-          "PolicyName": "CloudformationAccess",
-          "PolicyDocument": {
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Action": [
-                "s3:*",
-                "lambda:*",
-                "s3-object-lambda:*",
-                "logs:*",
-                "codedeploy:*",
-                "codebuild:*",
-                "cloudformation:*",
-                "iam:*",
-                "apigateway:*"
-              ],
-              "Effect": "Allow",
-              "Resource": "*"
-            }]
-          }
-        }]
       }
     }
   }
