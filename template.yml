@@ -14,7 +14,7 @@ Parameters:
   CodeDeployRole:
     Type: String
     Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
-    Default: "arn:aws:iam::044255305011:role/Creka_DEV_Tasks_Deploy"
+    Default: "arn:aws:iam::773930259638:role/Creka_DEV_Tasks_Deploy"
   HostCreka:
     Type: String
     Description: Api host creka dev
